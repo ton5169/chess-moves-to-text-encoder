@@ -4,6 +4,7 @@ from backend.encode import (
     ChessBoard,
     count_legal_moves,
     encode_to_ascii,
+    encoding_ascii_to_moves,
     generate_legal_moves,
 )
 
@@ -20,13 +21,6 @@ def chess_board_illegal_move():
     return ChessBoard(
         board_state='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         move='e2e1',
-    )
-
-
-@pytest.fixture
-def chess_board_invalid_board():
-    return ChessBoard(
-        board_state='rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
     )
 
 
@@ -90,11 +84,11 @@ class TestChessBoardMoves:
 
         assert 'is illegal' in str(excinfo.value)
 
-    def test_raise_value_error_for_invalid_board(
-        self, chess_board_invalid_board
-    ) -> None:
+    def test_raise_value_error_for_invalid_board(self) -> None:
         with pytest.raises(ValueError) as excinfo:
-            count_legal_moves(chess_board_invalid_board)
+            ChessBoard(
+                board_state='rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+            )
 
         assert 'The board state is invalid' in str(excinfo.value)
 
@@ -104,3 +98,11 @@ class TestChessEncode:
         letter = 'h'
         encoded_text = encode_to_ascii(letter)
         assert encoded_text == [104]
+
+    def test_encoding_ascii_to_moves(self, chess_board_start_position) -> None:
+        encoded_text = [104, 105]
+        encoded_moves = encoding_ascii_to_moves(
+            encoded_text, chess_board_start_position, 16
+        )
+
+        assert encoded_moves == ['c2c3', 'd7d5', 'd1a4', 'c7c6']
