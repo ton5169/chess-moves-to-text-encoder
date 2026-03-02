@@ -1,15 +1,68 @@
-from backend.encode import generate_legal_moves
+import pytest
+
+from backend.encode import ChessBoard, generate_legal_moves
 
 
-def test_generate_all_legal_moves_from_starting_position():
-    legal_moves_from_start = generate_legal_moves()
-
-    assert legal_moves_from_start == 20
-
-
-def test_generate_all_legal_moves_from_any_position():
-    legal_move_from_any_position = generate_legal_moves(
-        '3bkb2/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1', 'e2e4'
+@pytest.fixture
+def chess_board_start_position():
+    return ChessBoard(
+        board_state='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     )
 
-    assert legal_move_from_any_position == 18
+
+@pytest.fixture
+def chess_board_illegal_move():
+    return ChessBoard(
+        board_state='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        move='e2e1',
+    )
+
+
+@pytest.fixture
+def chess_board_invalid_board():
+    return ChessBoard(
+        board_state='rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    )
+
+
+class TestChessBoardCounts:
+    @pytest.mark.parametrize(
+        'board_state, move, expected_result',
+        [
+            (
+                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                None,
+                20,
+            ),
+            ('3bkb2/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1', 'e2e4', 16),
+        ],
+        ids=[
+            'starting-position - no move',
+            'custom-position - e2e4',
+        ],
+    )
+    def test_generate_legal_moves(
+        self, board_state: str, move: str, expected_result: int
+    ) -> None:
+        board = ChessBoard(move, board_state)
+        legal_moves_from_start = generate_legal_moves(board)
+
+        assert legal_moves_from_start == expected_result
+
+
+class TestChessBoardMoves:
+    def test_raise_value_error_for_illegal_move(
+        self, chess_board_illegal_move
+    ) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            generate_legal_moves(chess_board_illegal_move)
+
+        assert 'is illegal' in str(excinfo.value)
+
+    def test_raise_value_error_for_invalid_board(
+        self, chess_board_invalid_board
+    ) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            generate_legal_moves(chess_board_invalid_board)
+
+        assert 'The board state is invalid' in str(excinfo.value)
