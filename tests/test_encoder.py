@@ -1,6 +1,11 @@
 import pytest
 
-from backend.encode import ChessBoard, generate_legal_moves
+from backend.encode import (
+    ChessBoard,
+    count_legal_moves,
+    encode_to_ascii,
+    generate_legal_moves,
+)
 
 
 @pytest.fixture
@@ -41,21 +46,47 @@ class TestChessBoardCounts:
             'custom-position - e2e4',
         ],
     )
-    def test_generate_legal_moves(
+    def test_count_legal_moves(
         self, board_state: str, move: str, expected_result: int
     ) -> None:
         board = ChessBoard(move, board_state)
-        legal_moves_from_start = generate_legal_moves(board)
+        legal_moves_from_start = count_legal_moves(board)
 
         assert legal_moves_from_start == expected_result
 
 
 class TestChessBoardMoves:
+    def test_generate_legal_moves(self, chess_board_start_position) -> None:
+        legal_moves = generate_legal_moves(chess_board_start_position)
+
+        assert legal_moves == [
+            'a2a3',
+            'a2a4',
+            'b1a3',
+            'b1c3',
+            'b2b3',
+            'b2b4',
+            'c2c3',
+            'c2c4',
+            'd2d3',
+            'd2d4',
+            'e2e3',
+            'e2e4',
+            'f2f3',
+            'f2f4',
+            'g1f3',
+            'g1h3',
+            'g2g3',
+            'g2g4',
+            'h2h3',
+            'h2h4',
+        ]
+
     def test_raise_value_error_for_illegal_move(
         self, chess_board_illegal_move
     ) -> None:
         with pytest.raises(ValueError) as excinfo:
-            generate_legal_moves(chess_board_illegal_move)
+            count_legal_moves(chess_board_illegal_move)
 
         assert 'is illegal' in str(excinfo.value)
 
@@ -63,6 +94,13 @@ class TestChessBoardMoves:
         self, chess_board_invalid_board
     ) -> None:
         with pytest.raises(ValueError) as excinfo:
-            generate_legal_moves(chess_board_invalid_board)
+            count_legal_moves(chess_board_invalid_board)
 
         assert 'The board state is invalid' in str(excinfo.value)
+
+
+class TestChessEncode:
+    def test_encoding_from_letter_to_ascii(self) -> None:
+        letter = 'h'
+        encoded_text = encode_to_ascii(letter)
+        assert encoded_text == [104]
